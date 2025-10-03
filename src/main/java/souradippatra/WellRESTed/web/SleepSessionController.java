@@ -1,5 +1,6 @@
 package souradippatra.WellRESTed.web;
 
+import souradippatra.WellRESTed.client.SleepRecommendationClient;
 import souradippatra.WellRESTed.dto.SleepSessionDto;
 import souradippatra.WellRESTed.service.SleepSessionService;
 import org.springframework.data.domain.Page;
@@ -17,10 +18,12 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.*;
 
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 
 
 @RestController
@@ -29,10 +32,12 @@ public class SleepSessionController {
 
 
     private final SleepSessionService service;
+    private SleepRecommendationClient recommendationClient;
 
 
-    public SleepSessionController(SleepSessionService service) {
+    public SleepSessionController(SleepSessionService service, SleepRecommendationClient recommendationClient) {
         this.service = service;
+        this.recommendationClient = recommendationClient;
     }
 
 
@@ -55,6 +60,52 @@ public class SleepSessionController {
 
         return ResponseEntity.ok(coll);
     }
+
+    @GetMapping("/recommendations")
+    public ResponseEntity<CollectionModel<EntityModel<SleepSessionDto>>> getAllWithRecommendations(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size){
+            Page<SleepSessionDto> pageDto = service.getAllWithRecommendations(page, size);
+            List<EntityModel<SleepSessionDto>> sessionModels =
+                pageDto.stream().map(dto -> {
+                    if(dto.getSleepQuality() != null){
+                        SleepRecommendationClient.SleepRecommendationDto rec = recommendationClient.getRecommendation(dto.getSleepQuality());
+                        dto.setRecommendation(rec.recommendation());
+                        dto.setAdvice(rec.advice());
+                    }
+                    return EntityModel.of(
+                        dto,
+                        linkTo(methodOn(SleepSessionController.class, null).getById(dto.getId())).withSelfRel(),
+                        linkTo(methodOn(SleepSessionController.class, null).getWithRecommendation(dto.getId())).withRel("recommendation")
+                    );
+                }).toList();
+
+                CollectionModel<EntityModel<SleepSessionDto>> collectionModel = CollectionModel.of(sessionModels,
+                linkTo(methodOn(SleepSessionController.class).getAllWithRecommendations(page, size)).withSelfRel()
+                );
+
+
+        return ResponseEntity.ok(collectionModel);
+    }
+
+    
+
+    @GetMapping("/{id}/recommendation")
+    public ResponseEntity<EntityModel<SleepSessionDto>> getWithRecommendation(@PathVariable Long id) {
+    SleepSessionDto dto = service.getById(id);
+
+        // Fetch latest recommendation dynamically
+        if (dto.getSleepQuality() != null) {
+            SleepRecommendationClient.SleepRecommendationDto rec = recommendationClient.getRecommendation(dto.getSleepQuality());
+            dto.setRecommendation(rec.recommendation());
+            dto.setAdvice(rec.advice());
+        }
+        EntityModel<SleepSessionDto> model = EntityModel.of(dto,
+        linkTo(methodOn(SleepSessionController.class).getById(id)).withSelfRel(),
+        linkTo(methodOn(SleepSessionController.class).getWithRecommendation(id)).withRel("recommendation")
+        );
+    return ResponseEntity.ok(model);
+    }  
 
 
     // Keyset / seek listing (GET with lastId)

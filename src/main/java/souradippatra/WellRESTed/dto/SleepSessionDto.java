@@ -26,4 +26,8 @@ public class SleepSessionDto {
 
     private Instant createdAt;
     private Instant updatedAt;
+
+    // New field for recommendation
+    private String recommendation;
+    private String advice;
 }

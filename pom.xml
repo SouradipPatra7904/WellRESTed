@@ -81,6 +81,32 @@
 			<artifactId>spring-batch-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- Spring Boot Starter WS for SOAP -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web-services</artifactId>
+		</dependency>
+
+		<dependency>
+    		<groupId>wsdl4j</groupId>
+    		<artifactId>wsdl4j</artifactId>
+    		<version>1.6.3</version>
+		</dependency>
+
+
+
+		<!-- JAXB API for XML binding -->
+		<dependency>
+			<groupId>jakarta.xml.bind</groupId>
+			<artifactId>jakarta.xml.bind-api</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+		</dependency>
+	
 	</dependencies>
 
 	<build>
@@ -109,7 +135,10 @@
 					</excludes>
 				</configuration>
 			</plugin>
+
 		</plugins>
+
+		
 	</build>
 
 </project>

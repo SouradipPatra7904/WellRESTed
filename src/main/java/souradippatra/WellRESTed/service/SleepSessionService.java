@@ -18,4 +18,5 @@ public interface SleepSessionService {
 
     Page < SleepSessionDto > list(Long userId, Pageable pageable);
     List < SleepSessionDto > seek(Long userId, Long lastId, int size);
+    Page<SleepSessionDto> getAllWithRecommendations(int page, int size);
 }

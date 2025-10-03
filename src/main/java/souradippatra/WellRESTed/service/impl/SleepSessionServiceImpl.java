@@ -1,5 +1,6 @@
 package souradippatra.WellRESTed.service.impl;
 
+import souradippatra.WellRESTed.client.SleepRecommendationClient;
 import souradippatra.WellRESTed.domain.SleepSession;
 import souradippatra.WellRESTed.dto.SleepSessionDto;
 import souradippatra.WellRESTed.mapper.SleepSessionMapper;
@@ -9,7 +10,9 @@ import souradippatra.WellRESTed.service.SleepSessionService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,11 +28,13 @@ public class SleepSessionServiceImpl implements SleepSessionService {
 
     private final SleepSessionRepository repo;
     private final SleepSessionMapper mapper;
+    private final SleepRecommendationClient recommendationClient;
 
 
-    public SleepSessionServiceImpl(SleepSessionRepository repo, SleepSessionMapper mapper) {
+    public SleepSessionServiceImpl(SleepSessionRepository repo, SleepSessionMapper mapper, SleepRecommendationClient recommendationClient) {
         this.repo = repo;
         this.mapper = mapper;
+        this.recommendationClient = recommendationClient;
     }
 
 
@@ -37,6 +42,14 @@ public class SleepSessionServiceImpl implements SleepSessionService {
     public SleepSessionDto create(SleepSessionDto dto) {
         SleepSession entity = mapper.toEntity(dto);
         SleepSession saved = repo.save(entity);
+        SleepSessionDto result = mapper.toDto(saved);
+
+        // Fetch recommendation
+        if (saved.getSleepQuality() != null) {
+            SleepRecommendationClient.SleepRecommendationDto rec = recommendationClient.getRecommendation(saved.getSleepQuality());
+            result.setRecommendation(rec.recommendation());
+            result.setAdvice(rec.advice());
+        }   
         return mapper.toDto(saved);
     }
 
@@ -44,10 +57,16 @@ public class SleepSessionServiceImpl implements SleepSessionService {
     @Override
     @Transactional(readOnly = true)
     public SleepSessionDto getById(Long id) {
-        return repo.findById(id).map(mapper::toDto)
-            .orElseThrow(() -> new EntityNotFoundException("SleepSession not found: " + id));
+        SleepSession entity = repo.findById(id).orElseThrow(() -> new EntityNotFoundException("SleepSession not found: " + id));
+        return mapper.toDto(entity);
     }
 
+    @Override
+    public Page<SleepSessionDto> getAllWithRecommendations(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("startTime").descending());
+        Page<SleepSession> new_page = repo.findAll(pageable);
+        return new_page.map(mapper::toDto);
+    }
 
     @Override
     public SleepSessionDto replace(Long id, SleepSessionDto dto) {
