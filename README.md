@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # WellRESTed
 
 **Enterprise-Grade REST + SOAP Application with JPA**
@@ -94,3 +95,22 @@ Unlike typical CRUD demos, **WellRESTed** demonstrates:
 - Enterprise-grade separation of concerns.
 - Extensible architecture for monitoring, security, and scalability.
 
+=======
+
+## WellRESTed
+> An enterprise grade REST API with HATEOAS support and cookie based authentication.
+```
+1. Configure Postgres on localhost (or change application.yml).
+2. mvn spring-boot:run
+3. Sample endpoints:
+- GET /api/sleep-sessions
+- GET /api/sleep-sessions/{id}
+- POST /api/sleep-sessions
+- PATCH /api/sleep-sessions/{id}
+- PUT /api/sleep-sessions/{id}
+- DELETE /api/sleep-sessions/{id}
+- HEAD /api/sleep-sessions/{id}
+- OPTIONS /api/sleep-sessions
+```
+---
+>>>>>>> 695bf78a1d78f94a17a43ffd2349010a6085f868
