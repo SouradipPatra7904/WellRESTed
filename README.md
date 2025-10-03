@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # WellRESTed
 
 **Enterprise-Grade REST + SOAP Application with JPA**
